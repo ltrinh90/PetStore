@@ -1,83 +1,106 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
-using System.Linq;
-using System.Web;
-using System.Web.UI;
+using System.Text;
 using System.Web.UI.WebControls;
 
 namespace pet_store.User
 {
     public partial class Dog : System.Web.UI.Page
     {
-        SqlConnection con;
-        SqlCommand cmd;
-        SqlDataAdapter sda;
-        DataTable dt;
+        SqlConnection sqlConnection;
+        SqlCommand sqlCommand;
+        SqlDataAdapter sqlDataAdapter;
+
         protected void Page_Load(object sender, EventArgs e)
         {
-            if(!IsPostBack)
+            if (!IsPostBack)
             {
                 getCategories();
                 getProduct();
-            }    
+            }
         }
         private void getCategories()
         {
-            con = new SqlConnection(Connection.GetConnectionString());
-            cmd = new SqlCommand("Category_Crud", con);
-            cmd.Parameters.AddWithValue("@Action", "ACTIVECAT");
-            cmd.CommandType = CommandType.StoredProcedure;
-            sda = new SqlDataAdapter(cmd);
-            dt = new DataTable();
-            sda.Fill(dt);
-            rCategory.DataSource = dt;
+            sqlDataAdapter = new SqlDataAdapter();
+            sqlConnection = new SqlConnection(Connection.GetConnectionString());
+            var queryStringBuilder = new StringBuilder();
+
+            queryStringBuilder.Append("SELECT   ");
+            queryStringBuilder.Append("     c.*     ");
+            queryStringBuilder.Append("FROM     ");
+            queryStringBuilder.Append("     Categories AS c");
+
+            sqlDataAdapter.SelectCommand = new SqlCommand(queryStringBuilder.ToString(), sqlConnection);
+
+            var dataTable = new DataTable();
+            sqlDataAdapter.Fill(dataTable);
+
+            rCategory.DataSource = dataTable;
             rCategory.DataBind();
         }
 
         private void getProduct()
         {
-            con = new SqlConnection(Connection.GetConnectionString());
-            cmd = new SqlCommand("Product_Crud", con);
-            cmd.Parameters.AddWithValue("@Action", "ACTIVEPROD");
-            cmd.CommandType = CommandType.StoredProcedure;
-            sda = new SqlDataAdapter(cmd);
-            dt = new DataTable();
-            sda.Fill(dt);
-            rProduct.DataSource = dt;
+            sqlDataAdapter = new SqlDataAdapter();
+            sqlConnection = new SqlConnection(Connection.GetConnectionString());
+            var queryStringBuilder = new StringBuilder();
+
+            queryStringBuilder.Append("SELECT                                   ");
+            queryStringBuilder.Append("     p.*                                 ");
+            queryStringBuilder.Append("     , c.Name AS CategoryName            ");
+            queryStringBuilder.Append("FROM     ");
+            queryStringBuilder.Append("     Products AS p JOIN Categories AS c  ");
+            queryStringBuilder.Append("     ON p.CategoryID = c.CategoryID      ");
+
+            sqlDataAdapter.SelectCommand = new SqlCommand(queryStringBuilder.ToString(), sqlConnection);
+
+            DataSet dataSet = new DataSet();
+            sqlDataAdapter.Fill(dataSet);
+
+            rProduct.DataSource = dataSet;
             rProduct.DataBind();
         }
 
         protected void rProduct_ItemCommand(object source, RepeaterCommandEventArgs e)
         {
-            if(Session["userId"] != null)
+            if (Session["userId"] != null)
             {
                 bool isCartItemUpdated = false;
-                int i = isItemExistInCart(Convert.ToInt32(e.CommandArgument));
-                if(i == 0)
+                int i = CheckExist(Convert.ToInt32(e.CommandArgument));
+                if (i == 0)
                 {
                     // Adding new item in cart
-                    con = new SqlConnection(Connection.GetConnectionString());
-                    cmd = new SqlCommand("Cart_Crud", con);
-                    cmd.Parameters.AddWithValue("@Action", "INSERT");
-                    cmd.Parameters.AddWithValue("@ProductId", e.CommandArgument);
-                    cmd.Parameters.AddWithValue("@Quantity", 1);
-                    cmd.Parameters.AddWithValue("@UserId", Session["userId"]) ;
-                    cmd.CommandType = CommandType.StoredProcedure;
-                    try
+                    sqlConnection = new SqlConnection(Connection.GetConnectionString());
+                    sqlConnection.Open();
+                    using (var transaction = sqlConnection.BeginTransaction())
                     {
-                        con.Open();
-                        cmd.ExecuteNonQuery();
+                        try
+                        {
+                            var queryStringBuilder = new StringBuilder();
+
+                            queryStringBuilder.Append("INSERT                               ");
+                            queryStringBuilder.Append("INTO Carts (ProductID, Quantity)  ");
+                            queryStringBuilder.Append("VALUES (@ProductID, @Quantity)       ");
+
+                            sqlCommand = new SqlCommand(queryStringBuilder.ToString(), sqlConnection);
+                            sqlCommand.Parameters.AddWithValue("@ProductId", e.CommandArgument);
+                            sqlCommand.Parameters.AddWithValue("@Quantity", 1);
+                            transaction.Commit();
+                            sqlCommand.ExecuteNonQuery();
+                        }
+                        catch (Exception ex)
+                        {
+                            Response.Write("<script>alert('Error - " + ex.Message + " ');</script>");
+                            transaction.Rollback();
+                        }
+                        finally
+                        {
+                            sqlConnection.Close();
+                        }
+
                     }
-                    catch(Exception ex)
-                    {
-                        Response.Write("<script>alert('Error - " + ex.Message + " ');</script>");
-                    }
-                    finally
-                    {
-                        con.Close();
-                    }
+
                 }
                 else
                 {
@@ -90,27 +113,40 @@ namespace pet_store.User
                 lblMsg.Text = "Item addes successfully in your cart!";
                 lblMsg.CssClass = "alert alert-success";
                 Response.AddHeader("REFRESH", "1;URL=Cart.aspx");
-            }   
+            }
             else
             {
                 Response.Redirect("Login.aspx");
-            }    
+            }
         }
-        int isItemExistInCart(int productId)
+        int CheckExist(int productId)
         {
-            con = new SqlConnection(Connection.GetConnectionString());
-            cmd = new SqlCommand("Cart_Crud", con);
-            cmd.Parameters.AddWithValue("@Action", "GETBYID");
-            cmd.Parameters.AddWithValue("@ProductId", productId);
-            cmd.Parameters.AddWithValue("@UserId", Session["userId"]);
-            cmd.CommandType = CommandType.StoredProcedure;
-            sda = new SqlDataAdapter(cmd);
-            dt = new DataTable();
-            sda.Fill(dt);
+            var dataTable = new DataTable();
+            sqlDataAdapter = new SqlDataAdapter();
+            sqlConnection = new SqlConnection(Connection.GetConnectionString());
+            sqlCommand = new SqlCommand();
+            var queryStringBuilder = new StringBuilder();
+
+            queryStringBuilder.Append("SELECT                           ");
+            queryStringBuilder.Append("     p.Quantity                  ");
+            queryStringBuilder.Append("FROM                             ");
+            queryStringBuilder.Append("     Products AS p               ");
+            queryStringBuilder.Append("WHERE                            ");
+            queryStringBuilder.Append("     p.ProductID = @ProductID    ");
+
+            sqlCommand.Parameters.AddWithValue("@ProductID", productId);
+            sqlCommand.CommandText = queryStringBuilder.ToString();
+            sqlCommand.Connection = sqlConnection;
+
+            sqlDataAdapter.SelectCommand = sqlCommand;
+
+            sqlDataAdapter.Fill(dataTable);
+
             int quantity = 0;
-            if(dt.Rows.Count > 0)
+
+            if (dataTable.Rows.Count > 0)
             {
-                quantity = Convert.ToInt32(dt.Rows[0]["Quantity"]);
+                quantity = Convert.ToInt32(dataTable.Rows[0]["Quantity"]);
 
             }
             return quantity;

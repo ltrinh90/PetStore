@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
+using System.Text;
 using System.Web;
 using System.Web.UI;
 using System.Web.UI.WebControls;
@@ -35,16 +36,25 @@ namespace pet_store.User
 
         void getCartItems()
         {
+            var queryStringBuilder = new StringBuilder();
             con = new SqlConnection(Connection.GetConnectionString());
-            cmd = new SqlCommand("Cart_Crud", con);
-            cmd.Parameters.AddWithValue("@Action", "SELECT");
-            cmd.Parameters.AddWithValue("@UserId", Session["userId"]);
-            cmd.CommandType = CommandType.StoredProcedure;
+            cmd = new SqlCommand();
+
+            queryStringBuilder.Append("SELECT                               ");
+            queryStringBuilder.Append("     c.*                             ");
+            queryStringBuilder.Append("     , p.*                           ");
+            queryStringBuilder.Append("FROM                                 ");
+            queryStringBuilder.Append("     Carts AS c JOIN Products AS p   ");
+            queryStringBuilder.Append("     ON c.ProductID = p.ProductID    ");
+
+            cmd.Connection = con;
+            cmd.CommandText = queryStringBuilder.ToString();
             sda = new SqlDataAdapter(cmd);
-            dt = new DataTable();
-            sda.Fill(dt);
-            rCartItem.DataSource = dt;
-            if (dt.Rows.Count == 0)
+            var dataSet = new DataSet();
+            sda.Fill(dataSet);
+
+            rCartItem.DataSource = dataSet;
+            if (dataSet.Tables.Count == 0)
             {
                 rCartItem.FooterTemplate = null;
                 rCartItem.FooterTemplate = new CustomTemplate(ListItemType.Footer);

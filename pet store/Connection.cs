@@ -4,6 +4,7 @@ using System.Configuration;
 using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
+using System.Text;
 using System.Web;
 
 namespace pet_store
@@ -82,10 +83,15 @@ namespace pet_store
         public int cartCount(int userId)
         {
             con = new SqlConnection(Connection.GetConnectionString());
-            cmd = new SqlCommand("Cart_Crud", con);
-            cmd.Parameters.AddWithValue("@Action", "SELECT");
-            cmd.Parameters.AddWithValue("@UserId", userId);
-            cmd.CommandType = CommandType.StoredProcedure;
+            var queryStringBuilder = new StringBuilder();
+
+            queryStringBuilder.Append("SELECT           ");
+            queryStringBuilder.Append("     c.*         ");
+            queryStringBuilder.Append("FROM             ");
+            queryStringBuilder.Append("     Carts AS c  ");
+
+            cmd = new SqlCommand(queryStringBuilder.ToString(), con);
+
             sda = new SqlDataAdapter(cmd);
             DataTable dt = new DataTable();
             sda.Fill(dt);
