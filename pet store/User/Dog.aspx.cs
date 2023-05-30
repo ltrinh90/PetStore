@@ -1,10 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
-using System.Linq;
-using System.Web;
-using System.Web.UI;
 using System.Web.UI.WebControls;
 
 namespace pet_store.User
@@ -43,9 +39,10 @@ namespace pet_store.User
             cmd.Parameters.AddWithValue("@Action", "ACTIVEPROD");
             cmd.CommandType = CommandType.StoredProcedure;
             sda = new SqlDataAdapter(cmd);
-            dt = new DataTable();
-            sda.Fill(dt);
-            rProduct.DataSource = dt;
+            //dt = new DataTable();
+            var ds = new DataSet();
+            sda.Fill(ds);
+            rProduct.DataSource = ds;
             rProduct.DataBind();
         }
 

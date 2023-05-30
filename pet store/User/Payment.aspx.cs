@@ -1,11 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
-using System.Linq;
-using System.Web;
-using System.Web.UI;
-using System.Web.UI.WebControls;
+using System.Text;
 
 namespace pet_store.User
 {
@@ -41,14 +37,14 @@ namespace pet_store.User
             _cvv = txtCvv.Text.Trim();
             _address = txtAddress.Text.Trim();
             _paymentMethod = "card";
-            if(Session["userId"] != null)
+            if (Session["userId"] != null)
             {
                 OrderPayment(_name, _cardNo, _expiryDate, _cvv, _address, _paymentMethod);
             }
             else
             {
                 Response.Redirect("Login.aspx");
-            }    
+            }
         }
 
         protected void lbCodSubmit_Click(object sender, EventArgs e)
@@ -62,14 +58,14 @@ namespace pet_store.User
             else
             {
                 Response.Redirect("Login.aspx");
-            }    
+            }
 
         }
         void OrderPayment(string name, string cardNo, string expiryDate, string cvv, string address, string paymentMethod)
         {
             int paymentId; int productId; int quantity;
             dt = new DataTable();
-            dt.Columns.AddRange(new DataColumn[7] { 
+            dt.Columns.AddRange(new DataColumn[7] {
             new DataColumn("OrderNo", typeof(string)),
             new DataColumn("ProductId", typeof(int)),
             new DataColumn("Quantity", typeof(int)),
@@ -78,24 +74,53 @@ namespace pet_store.User
             new DataColumn("PaymentId", typeof(int)),
             new DataColumn("OrderDate", typeof(DateTime)),
             });
-        con = new SqlConnection(Connection.GetConnectionString());
-        con.Open();
-        #region Sql Transaction
-        transaction = con.BeginTransaction();
-        cmd = new SqlCommand("Save_Payment", con, transaction);
-        cmd.CommandType = CommandType.StoredProcedure;
-        cmd.Parameters.AddWithValue("@Name", name);
-        cmd.Parameters.AddWithValue("@CardNo", cardNo);
-        cmd.Parameters.AddWithValue("@ExpiryDate", expiryDate);
-        cmd.Parameters.AddWithValue("@Cvv", cvv);
-        cmd.Parameters.AddWithValue("@Address", address);
-        cmd.Parameters.AddWithValue("@PaymentMethod", paymentMethod);
-        cmd.Parameters.Add("@InsertedId", SqlDbType.Int);
-        cmd.Parameters["InsertedId"].Direction = ParameterDirection.Output;
-        try
+            con = new SqlConnection(Connection.GetConnectionString());
+            con.Open();
+            #region Sql Transaction
+            transaction = con.BeginTransaction();
+            var queryStringBuilder = new StringBuilder();
+
+            //INSERT INTO dbo.Payment(Name, CardNo, ExpiryDate,CvvNo,Address,PaymentMethod)
+            //VALUES(@Name, @CardNo, @ExpiryDate, @Cvv, @Address, @PaymentMethod)
+            queryStringBuilder.Append("INSERT INTO                      ");
+            queryStringBuilder.Append("     Payment (                   ");
+            queryStringBuilder.Append("         Name                    ");
+            queryStringBuilder.Append("         , CardNo                ");
+            queryStringBuilder.Append("         , ExpiryDate            ");
+            queryStringBuilder.Append("         , CvvNo                 ");
+            queryStringBuilder.Append("         , Address               ");
+            queryStringBuilder.Append("         , PaymentMode           ");
+            queryStringBuilder.Append("     )                           ");
+            queryStringBuilder.Append("VALUES                           ");
+            queryStringBuilder.Append("     (                           ");
+            queryStringBuilder.Append("         @Name                   ");
+            queryStringBuilder.Append("         , @CardNo               ");
+            queryStringBuilder.Append("         , @ExpiryDate           ");
+            queryStringBuilder.Append("         , @Cvv                  ");
+            queryStringBuilder.Append("         , @Address              ");
+            queryStringBuilder.Append("         , @PaymentMethod        ");
+            queryStringBuilder.Append("     )                           ");
+
+            cmd = new SqlCommand(queryStringBuilder.ToString(), con, transaction);
+            cmd.Parameters.AddWithValue("@Name", name);
+            cmd.Parameters.AddWithValue("@CardNo", cardNo);
+            cmd.Parameters.AddWithValue("@ExpiryDate", expiryDate);
+            cmd.Parameters.AddWithValue("@Cvv", cvv);
+            cmd.Parameters.AddWithValue("@Address", address);
+            cmd.Parameters.AddWithValue("@PaymentMethod", paymentMethod);
+            //cmd.Parameters.Add("@InsertedId", SqlDbType.Int);
+            //cmd.Parameters["InsertedId"].Direction = ParameterDirection.Output;
+            try
             {
                 cmd.ExecuteNonQuery();
-                paymentId = Convert.ToInt32(cmd.Parameters["@InsertedId"].Value);
+                transaction.Commit();
+
+                //paymentId = Convert.ToInt32(cmd.Parameters["@InsertedId"].Value);
+                var sqlDataAdapter = new SqlDataAdapter(new SqlCommand("SELECT MAX(PaymentID) AS PaymentID FROM Payment", con, transaction));
+                var ds = new DataSet();
+                sqlDataAdapter.Fill(ds);
+
+                paymentId = int.Parse((string)ds.Tables[0].Rows[0]["PaymentID"]);
 
                 #region Getting Cart Item's
                 cmd = new SqlCommand("Cart_Crud", con, transaction);
@@ -119,7 +144,7 @@ namespace pet_store.User
                 #endregion Getting Cart Item's
 
                 #region Order Details
-                if(dt.Rows.Count > 0)
+                if (dt.Rows.Count > 0)
                 {
                     cmd = new SqlCommand("Save_Orders", con, transaction);
                     cmd.Parameters.AddWithValue("@tblOrders", dt);
@@ -128,19 +153,19 @@ namespace pet_store.User
                 }
                 #endregion Order Details
 
-                transaction.Commit();
                 lblMsg.Visible = true;
                 lblMsg.Text = "Your item orderes successful!!!";
-                lblMsg.CssClass = "alert alert-success"; 
+                lblMsg.CssClass = "alert alert-success";
                 Response.AddHeader("REFRESH", "1;URL=Invoice.aspx?id=" + paymentId);
-                }
-                catch (Exception e)
-                {
+            }
+            catch (Exception e)
+            {
                 try
                 {
                     transaction.Rollback();
                 }
-                catch(Exception ex) {
+                catch (Exception ex)
+                {
                     Response.Write("<script><alert('" + ex.Message + "');</script>");
                 }
             }
@@ -163,7 +188,7 @@ namespace pet_store.User
                 while (dr1.Read())
                 {
                     dbQuantity = (int)dr1["Quantity"];
-                    if(dbQuantity > _quantity && dbQuantity > 2)
+                    if (dbQuantity > _quantity && dbQuantity > 2)
                     {
                         dbQuantity = dbQuantity - _quantity;
                         cmd = new SqlCommand("Product_Crud", sqlConnection, sqlTransaction);
@@ -176,7 +201,7 @@ namespace pet_store.User
                 }
                 dr1.Close();
             }
-            catch(Exception exe)
+            catch (Exception exe)
             {
                 Response.Write("<script>alert('" + exe.Message + "');</script>");
             }

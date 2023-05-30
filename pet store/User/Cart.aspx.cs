@@ -55,14 +55,12 @@ namespace pet_store.User
         protected void rCartItem_ItemCommand(object source, RepeaterCommandEventArgs e)
         {
             Utils utils = new Utils();
-            if(e.CommandName == "remove")
+            if (e.CommandName == "remove")
             {
                 con = new SqlConnection(Connection.GetConnectionString());
-                cmd = new SqlCommand("Cart_Crud", con);
+                cmd = new SqlCommand("DELETE FROM Products WHERE ProductID = @ProductID", con);
                 cmd.Parameters.AddWithValue("@Action", "DELETE");
-                cmd.Parameters.AddWithValue("@ProductId", e.CommandArgument);
-                cmd.Parameters.AddWithValue("@UserId", Session["userId"]);
-                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@ProductID", e.CommandArgument);
                 try
                 {
                     con.Open();
@@ -81,12 +79,12 @@ namespace pet_store.User
                 }
             }
 
-            if(e.CommandName == "updateCart")
+            if (e.CommandName == "updateCart")
             {
                 bool isCartUpdated = false;
-                for(int item = 0; item < rCartItem.Items.Count; item++)
+                for (int item = 0; item < rCartItem.Items.Count; item++)
                 {
-                    if(rCartItem.Items[item].ItemType == ListItemType.Item || rCartItem.Items[item].ItemType == ListItemType.AlternatingItem)
+                    if (rCartItem.Items[item].ItemType == ListItemType.Item || rCartItem.Items[item].ItemType == ListItemType.AlternatingItem)
                     {
                         TextBox quantity = rCartItem.Items[item].FindControl("txtQuantity") as TextBox;
                         HiddenField _productId = rCartItem.Items[item].FindControl("hdnProductId") as HiddenField;
@@ -130,12 +128,12 @@ namespace pet_store.User
 
                         bool isTrue = false;
                         int updatedQuantity = 1;
-                        if(quantityFromCart > quantityFromDB)
+                        if (quantityFromCart > quantityFromDB)
                         {
                             updatedQuantity = quantityFromCart;
                             isTrue = true;
                         }
-                        else if(quantityFromCart < quantityFromDB)
+                        else if (quantityFromCart < quantityFromDB)
                         {
                             updatedQuantity = quantityFromCart;
                             isTrue = true;
@@ -145,11 +143,11 @@ namespace pet_store.User
                             // Update cart item's  quantity in DB.
                             isCartUpdated = utils.updateCartQuantity(updatedQuantity, ProductId, Convert.ToInt32(Session["userId"]));
                         }
-                    }    
+                    }
                 }
                 getCartItems();
-            } 
-            if(e.CommandName == "checkout")
+            }
+            if (e.CommandName == "checkout")
             {
                 bool isTrue = false;
                 string pName = string.Empty;
@@ -163,44 +161,37 @@ namespace pet_store.User
                         HiddenField _productQuantity = rCartItem.Items[item].FindControl("hdnPrdQuantity") as HiddenField;
                         Label productName = rCartItem.Items[item].FindControl("lblName") as Label;
                         int productId = Convert.ToInt32(_productId.Value);
-                     
-                        // int cartQuantity = Convert.ToInt32(_cartQuantity.Value);
-                        int cartQuantity;
-                        if (int.TryParse(_cartQuantity.Value, out cartQuantity))
-                        {
-                           // Chuyển đổi thành công, sử dụng giá trị của cartQuantity ở đây
-                           Console.WriteLine("Giá trị của cartQuantity là: " + cartQuantity);
-                        }
-                        else
-                       {
-                            // Xử lý lỗi khi chuỗi không hợp lệ
-                         Console.WriteLine("Lỗi");
-                        }
+
+                        int cartQuantity = Convert.ToInt32(_cartQuantity.Value);
+                        //int cartQuantity;
+                        //if (int.TryParse(_cartQuantity.Value, out cartQuantity))
+                        //{
+                        //    // Chuyển đổi thành công, sử dụng giá trị của cartQuantity ở đây
+                        //    Console.WriteLine("Giá trị của cartQuantity là: " + cartQuantity);
+                        //}
+                        //else
+                        //{
+                        //    // Xử lý lỗi khi chuỗi không hợp lệ
+                        //    Console.WriteLine("Lỗi");
+                        //}
 
                         int productQuantity = Convert.ToInt32(_productQuantity.Value);
                         if (productQuantity > cartQuantity && productQuantity > 2)
                         {
-                           isTrue = true;
-                        }
-                        else 
-                        {
                             isTrue = true;
-                            pName = productName.Text.ToString();
-                            break;
-                        }
-                        if (isTrue)
-                        {
-                            Response.Redirect("Payment.aspx");
-                        }
-                        else
-                        {
                             lblMsg.Visible = true;
                             lblMsg.Text = "Item <b>'" + pName + "' is out of stock:(";
                             lblMsg.CssClass = "alert alert-warning";
-                        }    
+                        }
+                        else
+                        {
+                            isTrue = true;
+                            pName = productName.Text.ToString();
+                            Response.Redirect("Payment.aspx");
+                        }
                     }
                 }
-            }    
+            }
         }
         protected void rCartItem_ItemDataBound(object sender, RepeaterItemEventArgs e)
         {
@@ -212,7 +203,7 @@ namespace pet_store.User
 
                 decimal calTotalPrice = 0;
                 decimal productPriceValue = 0;
-                decimal quantityValue = 0; 
+                decimal quantityValue = 0;
 
                 if (decimal.TryParse(productPrice.Text, out productPriceValue) && decimal.TryParse(quantity.Text, out quantityValue))
                 {
@@ -233,9 +224,9 @@ namespace pet_store.User
             }
             public void InstantiateIn(Control container)
             {
-                if(ListItemType == ListItemType.Footer)
+                if (ListItemType == ListItemType.Footer)
                 {
-                    var footer = new LiteralControl("<tr><td colspan='5'><b>Your Cart is empty.</b><a href='Dog.aspx' class='badge badge-info ml-2'>Continue Shopping</a></td></tr></tbody></table>" );
+                    var footer = new LiteralControl("<tr><td colspan='5'><b>Your Cart is empty.</b><a href='Dog.aspx' class='badge badge-info ml-2'>Continue Shopping</a></td></tr></tbody></table>");
                     container.Controls.Add(footer);
                 }
             }

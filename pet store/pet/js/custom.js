@@ -1,4 +1,4 @@
-// to get current year
+﻿// to get current year
 function getYear() {
     var currentDate = new Date();
     var currentYear = currentDate.getFullYear();
@@ -30,7 +30,7 @@ $(window).on('load', function () {
 
     $(document).ready(function () {
         function getUrlVars() {
-            var vars= [], hash;
+            var vars = [], hash;
             var hashes = window.location.href.slice(window.location.href.indexOf('?') + 1).split('&');
             for (var i = 0; i < hashes.length; i++) {
                 hash = hashes[i].split('=');
@@ -61,9 +61,9 @@ $(window).on('load', function () {
 });
 
 // nice select
-$(document).ready(function() {
+$(document).ready(function () {
     $('select').niceSelect();
-  });
+});
 
 /** google_map js **/
 function myMap() {
@@ -103,28 +103,24 @@ $(".client_owl-carousel").owlCarousel({
 
 /*Quantity change*/
 (function ($) {
+
     var proQty = $(' .pro-qty');
-    proQty.prepend('<span class="dec qtybtn" >-</span>');
-    proQty.append('<span class="inc qtybtn">+</span>');
+    proQty.prepend('<button id="decrementQtyBtn" class="dec qtybtn">-</button>');
+    proQty.append('<button id="incrementQtyBtn" class="inc qtybtn">+</button>');
+
     proQty.on('click', '.qtybtn', function () {
         var $button = $(this);
         var oldValue = $button.parent().find('input').val();
+        let value = Number(oldValue)
+
         if ($button.hasClass('inc')) {
-            if (oldValue >= 10) {
-                var newVal = parseFloat(oldValue);
+            value++
+        } else {
+            if (value === 1) {
+                return;
             }
-            else {
-                newVal = parseFloat(oldValue);
-            }
-        } else
-        {
-            if (oldValue > 1) {
-                var newVal = parseFloat(oldValue) - 1;
-            }
-            else {
-                newVal = 1;
-            }
+            value--
         }
-        $button.parent().find('input').val(newVal);
+        $button.parent().find('input').val(value);
     });
 })(jQuery);
