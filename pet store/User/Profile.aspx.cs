@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
-using System.Linq;
-using System.Web;
 using System.Web.UI;
 using System.Web.UI.WebControls;
 
@@ -47,7 +44,7 @@ namespace pet_store.User
                 Session["name"]  = dt.Rows[0]["Name"].ToString();
                 Session["email"] = dt.Rows[0]["Email"].ToString();
                 Session["imageUrl"] = dt.Rows[0]["ImageUrl"].ToString();
-                Session["createdDate"] = dt.Rows[0]["CreatedDate"].ToString();
+                Session["createdDate"] = dt.Rows[0]["CreateDate"].ToString();
                
             }
         }
