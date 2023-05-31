@@ -1,4 +1,6 @@
-﻿using System;
+﻿using pet_store.Service.Implement;
+using pet_store.Service.Interface;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
@@ -9,6 +11,8 @@ namespace pet_store.User
 {
     public partial class User : System.Web.UI.MasterPage
     {
+        private readonly CartService cartService = new CartService();
+
         protected void Page_Load(object sender, EventArgs e)
         {
             if (!Request.Url.AbsoluteUri.ToString().Contains("Default.aspx"))
@@ -25,23 +29,22 @@ namespace pet_store.User
                 pnlSliderUC.Controls.Add(sliderUserControl);
             }
 
-            if(Session["userId"] != null)
+            if (Session["userId"] != null)
             {
                 lbLoginOrLogout.Text = "Logout";
-                Utils utils = new Utils();
-                Session["cartCount"] = utils.cartCount(Convert.ToInt32(Session["userId"])).ToString();
+                Session["cartCount"] = cartService.Count(Convert.ToInt32(Session["userId"])).ToString();
             }
             else
             {
                 lbLoginOrLogout.Text = "Login";
                 // sl giỏ hàng
                 Session["cartCount"] = "0";
-            }    
+            }
         }
 
         protected void lbLoginOrLogout_Click(object sender, EventArgs e)
         {
-            if(Session["userId"] == null)
+            if (Session["userId"] == null)
             {
                 Response.Redirect("Login.aspx");
             }
@@ -49,7 +52,7 @@ namespace pet_store.User
             {
                 Session.Abandon();
                 Response.Redirect("Login.aspx");
-            }    
+            }
         }
 
         protected void lbRegisterOrProfile_Click(object sender, EventArgs e)
@@ -66,5 +69,5 @@ namespace pet_store.User
             }
         }
     }
-    
+
 }

@@ -1,11 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
 using System.IO;
-using System.Linq;
-using System.Web;
-using System.Web.UI;
 using System.Web.UI.WebControls;
 
 namespace pet_store.User
@@ -49,7 +45,7 @@ namespace pet_store.User
             cmd.Parameters.AddWithValue("@Password", txtPassword.Text.Trim());
             if (fuUserImage.HasFile)
             {
-                if (Utils.IsValidExtension(fuUserImage.FileName))
+                if (Util.Utils.IsValidExtension(fuUserImage.FileName))
                 {
                     Guid obj = Guid.NewGuid();
                     fileExtension = Path.GetExtension(fuUserImage.FileName);

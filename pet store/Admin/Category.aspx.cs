@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Web;
-using System.Web.UI;
 using System.Web.UI.WebControls;
 using System.Data;
 using System.Data.SqlClient;
@@ -48,7 +44,7 @@ namespace pet_store.Admin
             cmd.Parameters.AddWithValue("@IsActive", cbIsActive.Checked);
             if(fuCategoryImage.HasFile)
             {
-                if(Utils.IsValidExtension(fuCategoryImage.FileName))
+                if(Util.Utils.IsValidExtension(fuCategoryImage.FileName))
                 {
                     Guid obj = Guid.NewGuid();
                     fileExtension = Path.GetExtension(fuCategoryImage.FileName);

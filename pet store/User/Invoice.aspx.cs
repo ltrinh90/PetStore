@@ -13,6 +13,7 @@ using iTextSharp.text.pdf;
 using iTextSharp.text;
 using System.IO;
 using System.Net;
+using System.Text;
 
 namespace pet_store.User
 {
@@ -27,15 +28,15 @@ namespace pet_store.User
         {
             if (!IsPostBack)
             {
-              if(Session["userId"] !=null)
-              {
-                    if(Request.QueryString["id"] !=null)
+                if (Session["userId"] != null)
+                {
+                    if (Request.QueryString["id"] != null)
                     {
                         rOrderItem.DataSource = GetOrderDetails();
                         rOrderItem.DataBind();
                     }
-              }
-              else
+                }
+                else
                 {
                     Response.Redirect("Login.aspx");
                 }
@@ -43,23 +44,39 @@ namespace pet_store.User
         }
         DataTable GetOrderDetails()
         {
-        double grandTotal = 0;
-        con  = new SqlConnection(Connection.GetConnectionString());
-        cmd = new SqlCommand("Invoice", con);
-        cmd.Parameters.AddWithValue("@Action", "INVOICBYID");
-        cmd.Parameters.AddWithValue("@PaymentId", Convert.ToInt32(Request.QueryString["id"]));
-        cmd.Parameters.AddWithValue("@UserId", Session["userId"]);
-        cmd.CommandType = CommandType.StoredProcedure;
-        sda = new SqlDataAdapter(cmd);
-        dt = new DataTable();
-        sda.Fill(dt);
-        if(dt.Rows.Count > 0)
-        {
-              foreach (DataRow drow in dt.Rows)
-              {
-                    grandTotal += Convert.ToDouble(drow["TotalPrice"]);
-              }
-        }
+            double grandTotal = 0;
+            con = new SqlConnection(Connection.GetConnectionString());
+            var sql = new StringBuilder();
+            sql.Append("SELECT                                      ");
+            sql.Append("    o.OrderNo                               ");
+            sql.Append("    , o.Quantity                            ");
+            sql.Append("    , o.OrderDate                           ");
+            sql.Append("    , o.Status                              ");
+            sql.Append("    , o.Quantity                            ");
+            sql.Append("    , p.Name                                ");
+            sql.Append("    , p.Price                               ");
+            sql.Append("    , (p.Price * o.Quantity) as TotalPrice  ");
+            sql.Append("FROM                                        ");
+            sql.Append("    Orders AS o JOIN Products AS p          ");
+            sql.Append("    ON p.ProductId = o.ProductId            ");
+            sql.Append("WHERE                                       ");
+            sql.Append("    o.PaymentId = @PaymentId                ");
+            sql.Append("    AND o.UserId = @UserId                  ");
+            cmd = new SqlCommand(sql.ToString(), con);
+
+            cmd.Parameters.AddWithValue("@PaymentId", Convert.ToInt32(Request.QueryString["id"]));
+            cmd.Parameters.AddWithValue("@UserId", Session["userId"]);
+
+            sda = new SqlDataAdapter(cmd);
+            var ds = new DataSet();
+            sda.Fill(ds);
+            if (ds.Tables[0].Rows.Count > 0)
+            {
+                foreach (DataRow r in ds.Tables[0].Rows)
+                {
+                    grandTotal += Convert.ToDouble(r["TotalPrice"]);
+                }
+            }
             DataRow dr = dt.NewRow();
             dr["TotalPrice"] = grandTotal;
             dt.Rows.Add(dr);
@@ -70,20 +87,20 @@ namespace pet_store.User
         {
             try
             {
-                string downloadPath = @"D:\abc\order_invoice.pdf";
+                string downloadPath = @"D:\";
                 DataTable dtbl = GetOrderDetails();
                 ExportToPdf(dtbl, downloadPath, "Order Invoice");
 
                 WebClient client = new WebClient();
                 Byte[] buffer = client.DownloadData(downloadPath);
-                if(buffer != null)
+                if (buffer != null)
                 {
                     Response.ContentType = "application/pdf";
                     Response.AddHeader("content-length", buffer.Length.ToString());
                     Response.BinaryWrite(buffer);
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 lblMsg.Visible = true;
                 lblMsg.Text = "Error Message:- " + ex.Message.ToString();
@@ -108,10 +125,14 @@ namespace pet_store.User
 
             //Author
             Paragraph prgAuthor = new Paragraph();
+
+            // BaseFont: sử dụng để tạo và quản lý các font chữ trong tài liệu PDF.
+            // btnAuthor: tên biến được khai báo để lưu trữ đối tượng BaseFont mới được tạo
+
             BaseFont btnAuthor = BaseFont.CreateFont(BaseFont.TIMES_ROMAN, BaseFont.CP1252, BaseFont.NOT_EMBEDDED);
             Font fntAuthor = new Font(btnAuthor, 8, 2, Color.GRAY);
             prgAuthor.Alignment = Element.ALIGN_RIGHT;
-            prgAuthor.Add(new Chunk("Order From : Foodie Fast Food", fntAuthor));
+            prgAuthor.Add(new Chunk("Order From :Pet Store", fntAuthor));
             prgAuthor.Add(new Chunk("\nOrder Date : " + dtblTable.Rows[0]["OrderDate"].ToString(), fntAuthor));
             document.Add(prgAuthor);
 

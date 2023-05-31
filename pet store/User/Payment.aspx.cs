@@ -1,4 +1,5 @@
 ﻿using System;
+
 using System.Data;
 using System.Data.SqlClient;
 using System.Text;
@@ -89,7 +90,7 @@ namespace pet_store.User
             queryStringBuilder.Append("         , ExpiryDate            ");
             queryStringBuilder.Append("         , CvvNo                 ");
             queryStringBuilder.Append("         , Address               ");
-            queryStringBuilder.Append("         , PaymentMode           ");
+            queryStringBuilder.Append("         , PaymentMethod         ");
             queryStringBuilder.Append("     )                           ");
             queryStringBuilder.Append("VALUES                           ");
             queryStringBuilder.Append("     (                           ");
@@ -113,14 +114,14 @@ namespace pet_store.User
             try
             {
                 cmd.ExecuteNonQuery();
-                transaction.Commit();
 
                 //paymentId = Convert.ToInt32(cmd.Parameters["@InsertedId"].Value);
                 var sqlDataAdapter = new SqlDataAdapter(new SqlCommand("SELECT MAX(PaymentID) AS PaymentID FROM Payment", con, transaction));
                 var ds = new DataSet();
                 sqlDataAdapter.Fill(ds);
+                paymentId = (int)ds.Tables[0].Rows[0]["PaymentID"];
 
-                paymentId = int.Parse((string)ds.Tables[0].Rows[0]["PaymentID"]);
+                //paymentId = int.Parse((string)ds.Tables[0].Rows[0]["PaymentID"]);
 
                 #region Getting Cart Item's
                 cmd = new SqlCommand("Cart_Crud", con, transaction);
@@ -137,7 +138,7 @@ namespace pet_store.User
                     // Delete Cart Item
                     DeleteCartItem(productId, transaction, con);
                     // Delete Cart Item End
-                    dt.Rows.Add(Utils.GetUniqueId(), productId, quantity, (int)Session["userId"], "Pending",
+                    dt.Rows.Add(Util.Utils.GetUniqueId(), productId, quantity, (int)Session["userId"], "Pending",
                         paymentId, Convert.ToDateTime(DateTime.Now));
                 }
                 dr.Close();
@@ -156,18 +157,13 @@ namespace pet_store.User
                 lblMsg.Visible = true;
                 lblMsg.Text = "Your item orderes successful!!!";
                 lblMsg.CssClass = "alert alert-success";
+                transaction.Commit();
                 Response.AddHeader("REFRESH", "1;URL=Invoice.aspx?id=" + paymentId);
             }
             catch (Exception e)
             {
-                try
-                {
-                    transaction.Rollback();
-                }
-                catch (Exception ex)
-                {
-                    Response.Write("<script><alert('" + ex.Message + "');</script>");
-                }
+                transaction.Rollback();
+                Response.Write("<script><alert('" + e.Message + "');</script>");
             }
             #endregion Sql Transaction 
             finally

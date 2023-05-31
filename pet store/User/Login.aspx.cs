@@ -15,13 +15,16 @@ namespace pet_store.User
         SqlCommand cmd;
         SqlDataAdapter sda;
         DataTable dt;
-        protected void Page_Load(object sender, EventArgs e)
-        {
-            if(Session["userId"] != null)
-            {
-                Response.Redirect("Default.aspx");
-            }
-        }
+        //protected void Page_Load(object sender, EventArgs e)
+        //{
+        //    if(Session["userId"] != null)
+        //    {
+        //        Response.Redirect("Default.aspx");
+        //    } else
+        //    {
+        //        Response.Redirect("Login.aspx");
+        //    }
+        //}
 
         protected void btnLogin_Click(object sender, EventArgs e)
         {

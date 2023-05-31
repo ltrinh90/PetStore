@@ -281,6 +281,9 @@
     <Compile Include="Admin\Users.aspx.designer.cs">
       <DependentUpon>Users.aspx</DependentUpon>
     </Compile>
+    <Compile Include="CartService.cs" />
+    <Compile Include="ICartService.cs" />
+    <Compile Include="Utils.cs" />
     <Compile Include="Connection.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>

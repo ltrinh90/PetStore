@@ -1,6 +1,6 @@
 ﻿<%@ Page Title="" Language="C#" MasterPageFile="~/Admin/Admin.Master" AutoEventWireup="true" CodeBehind="Product.aspx.cs" Inherits="pet_store.Admin.Product" %>
 
-<%@ Import Namespace ="pet_store" %>
+<%@ Import Namespace ="pet_store.Util" %>
 <asp:Content ID="Content1" ContentPlaceHolderID="head" runat="server">
 
 
