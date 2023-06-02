@@ -3,6 +3,7 @@
 </asp:Content>
 <asp:Content ID="Content2" ContentPlaceHolderID="ContentPlaceHolder1" runat="server">
 
+    
        <!-- book section -->
   <section class="book_section layout_padding">
     <div class="container">
@@ -84,5 +85,5 @@
       </div>
     </div>
   </section>
-  <!-- end book section -->
+  <!-- end book section --> 
 </asp:Content>

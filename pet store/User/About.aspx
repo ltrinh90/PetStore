@@ -25,15 +25,18 @@
               Get Delivery
 Delivery of pets throughout the Southwest provinces, same day delivery in Ho Chi Minh City. Delivery of accessories and supplies nationwide.
 Purchase Support
+
 Call hotline 028.7304.0479 for advice and support in ordering goods and answering questions when raising pets
 Good price
+
 Wide range of products and prices. There is a Warranty for high value pets. Prestige quality, competitive cost
 Overflowing Promotions
+
 Attractive after-sales mode. With many loyalty programs with many incentives and promotions.
             </p>
-            <a href="">
+            <%--<a href="">
               Read More
-            </a>
+            </a>--%>
           </div>
         </div>
       </div>

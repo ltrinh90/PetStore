@@ -45,12 +45,12 @@ namespace pet_store.User
             sda = new SqlDataAdapter(cmd);
             var ds = new DataSet();
             sda.Fill(ds);
-            rCartItem.DataSource = ds;
-            if (ds.Tables.Count == 0)
+            if (ds.Tables[0].Rows.Count == 0)
             {
                 //rCartItem.FooterTemplate = null;
                 rCartItem.FooterTemplate = new CustomTemplate(ListItemType.Footer);
             }
+            rCartItem.DataSource = ds;
             rCartItem.DataBind();
         }
         protected void rCartItem_ItemCommand(object source, RepeaterCommandEventArgs e)

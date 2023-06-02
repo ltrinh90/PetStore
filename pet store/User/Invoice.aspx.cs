@@ -42,20 +42,20 @@ namespace pet_store.User
                 }
             }
         }
-        DataTable GetOrderDetails()
+        List<InvoiceDto> GetOrderDetails()
         {
             double grandTotal = 0;
+            List<InvoiceDto> invoices = new List<InvoiceDto>();
             con = new SqlConnection(Connection.GetConnectionString());
             var sql = new StringBuilder();
             sql.Append("SELECT                                      ");
             sql.Append("    o.OrderNo                               ");
-            sql.Append("    , o.Quantity                            ");
+            sql.Append("    , o.Quatity                            ");
             sql.Append("    , o.OrderDate                           ");
             sql.Append("    , o.Status                              ");
-            sql.Append("    , o.Quantity                            ");
             sql.Append("    , p.Name                                ");
             sql.Append("    , p.Price                               ");
-            sql.Append("    , (p.Price * o.Quantity) as TotalPrice  ");
+            sql.Append("    , (p.Price * p.Quantity) as TotalPrice  ");
             sql.Append("FROM                                        ");
             sql.Append("    Orders AS o JOIN Products AS p          ");
             sql.Append("    ON p.ProductId = o.ProductId            ");
@@ -74,13 +74,26 @@ namespace pet_store.User
             {
                 foreach (DataRow r in ds.Tables[0].Rows)
                 {
-                    grandTotal += Convert.ToDouble(r["TotalPrice"]);
+                    var _orderDate = (DateTime)r["OrderDate"];
+
+                    var invoice = new InvoiceDto
+                    {
+                        Name = (string)r["Name"],
+                        OrderDate = _orderDate,
+                        OrderNo = (string)r["OrderNo"],
+                        Price = (int)r["Price"],
+                        Quatity = (int)r["Quantity"],
+                        Status = (string)r["Status"],
+                        TotalPrice = (int)r["TotalPrice"]
+                    };
+                    invoices.Add(invoice);
                 }
             }
-            DataRow dr = dt.NewRow();
-            dr["TotalPrice"] = grandTotal;
-            dt.Rows.Add(dr);
-            return dt;
+            //var dt = new DataTable();
+            //DataRow dr = dt.NewRow();
+            //dr["TotalPrice"] = grandTotal;
+            //dt.Rows.Add(dr);
+            return invoices;
         }
 
         protected void lbDownloadInvoice_Click(object sender, EventArgs e)
@@ -88,8 +101,8 @@ namespace pet_store.User
             try
             {
                 string downloadPath = @"D:\";
-                DataTable dtbl = GetOrderDetails();
-                ExportToPdf(dtbl, downloadPath, "Order Invoice");
+                List<InvoiceDto> invoices = GetOrderDetails();
+                ExportToPdf(invoices, downloadPath, "Order Invoice");
 
                 WebClient client = new WebClient();
                 Byte[] buffer = client.DownloadData(downloadPath);
@@ -107,71 +120,81 @@ namespace pet_store.User
             }
         }
 
-        void ExportToPdf(DataTable dtblTable, String strPdfPath, string strHeader)
+        void ExportToPdf(List<InvoiceDto> invoices, String strPdfPath, string strHeader)
         {
-            FileStream fs = new FileStream(strPdfPath, FileMode.Create, FileAccess.Write, FileShare.None);
-            Document document = new Document();
-            document.SetPageSize(PageSize.A4);
-            PdfWriter writer = PdfWriter.GetInstance(document, fs);
-            document.Open();
+            //FileStream fs = new FileStream(strPdfPath, FileMode.Create, FileAccess.Write, FileShare.None);
+            //Document document = new Document();
+            //document.SetPageSize(PageSize.A4);
+            //PdfWriter writer = PdfWriter.GetInstance(document, fs);
+            //document.Open();
 
-            //Report Header
-            BaseFont bfntHead = BaseFont.CreateFont(BaseFont.TIMES_ROMAN, BaseFont.CP1252, BaseFont.NOT_EMBEDDED);
-            Font fntHead = new Font(bfntHead, 16, 1, Color.GRAY);
-            Paragraph prgHeading = new Paragraph();
-            prgHeading.Alignment = Element.ALIGN_CENTER;
-            prgHeading.Add(new Chunk(strHeader.ToUpper(), fntHead));
-            document.Add(prgHeading);
+            ////Report Header
+            //BaseFont bfntHead = BaseFont.CreateFont(BaseFont.TIMES_ROMAN, BaseFont.CP1252, BaseFont.NOT_EMBEDDED);
+            //Font fntHead = new Font(bfntHead, 16, 1, Color.GRAY);
+            //Paragraph prgHeading = new Paragraph();
+            //prgHeading.Alignment = Element.ALIGN_CENTER;
+            //prgHeading.Add(new Chunk(strHeader.ToUpper(), fntHead));
+            //document.Add(prgHeading);
 
-            //Author
-            Paragraph prgAuthor = new Paragraph();
+            ////Author
+            //Paragraph prgAuthor = new Paragraph();
 
-            // BaseFont: sử dụng để tạo và quản lý các font chữ trong tài liệu PDF.
-            // btnAuthor: tên biến được khai báo để lưu trữ đối tượng BaseFont mới được tạo
+            //// BaseFont: sử dụng để tạo và quản lý các font chữ trong tài liệu PDF.
+            //// btnAuthor: tên biến được khai báo để lưu trữ đối tượng BaseFont mới được tạo
 
-            BaseFont btnAuthor = BaseFont.CreateFont(BaseFont.TIMES_ROMAN, BaseFont.CP1252, BaseFont.NOT_EMBEDDED);
-            Font fntAuthor = new Font(btnAuthor, 8, 2, Color.GRAY);
-            prgAuthor.Alignment = Element.ALIGN_RIGHT;
-            prgAuthor.Add(new Chunk("Order From :Pet Store", fntAuthor));
-            prgAuthor.Add(new Chunk("\nOrder Date : " + dtblTable.Rows[0]["OrderDate"].ToString(), fntAuthor));
-            document.Add(prgAuthor);
+            //BaseFont btnAuthor = BaseFont.CreateFont(BaseFont.TIMES_ROMAN, BaseFont.CP1252, BaseFont.NOT_EMBEDDED);
+            //Font fntAuthor = new Font(btnAuthor, 8, 2, Color.GRAY);
+            //prgAuthor.Alignment = Element.ALIGN_RIGHT;
+            //prgAuthor.Add(new Chunk("Order From :Pet Store", fntAuthor));
+            //prgAuthor.Add(new Chunk("\nOrder Date : " + dtblTable.Rows[0]["OrderDate"].ToString(), fntAuthor));
+            //document.Add(prgAuthor);
 
-            //Add a line seperation
-            Paragraph p = new Paragraph(new Chunk(new iTextSharp.text.pdf.draw.LineSeparator(0.0F, 100.0F, Color.BLACK, Element.ALIGN_LEFT, 1)));
-            document.Add(p);
+            ////Add a line seperation
+            //Paragraph p = new Paragraph(new Chunk(new iTextSharp.text.pdf.draw.LineSeparator(0.0F, 100.0F, Color.BLACK, Element.ALIGN_LEFT, 1)));
+            //document.Add(p);
 
-            //Add line break
-            document.Add(new Chunk("\n", fntHead));
+            ////Add line break
+            //document.Add(new Chunk("\n", fntHead));
 
-            //Write the table
-            PdfPTable table = new PdfPTable(dtblTable.Columns.Count - 2);
-            //Table header
-            BaseFont btnColumnHeader = BaseFont.CreateFont(BaseFont.TIMES_ROMAN, BaseFont.CP1252, BaseFont.NOT_EMBEDDED);
-            Font fntColumnHeader = new Font(btnColumnHeader, 9, 1, Color.WHITE);
-            for (int i = 0; i < dtblTable.Columns.Count - 2; i++)
-            {
-                PdfPCell cell = new PdfPCell();
-                cell.BackgroundColor = Color.GRAY;
-                cell.AddElement(new Chunk(dtblTable.Columns[i].ColumnName.ToUpper(), fntColumnHeader));
-                table.AddCell(cell);
-            }
-            //table Data
-            Font fntColumnData = new Font(btnColumnHeader, 8, 1, Color.BLACK);
-            for (int i = 0; i < dtblTable.Rows.Count; i++)
-            {
-                for (int j = 0; j < dtblTable.Columns.Count - 2; j++)
-                {
-                    PdfPCell cell = new PdfPCell();
-                    cell.AddElement(new Chunk(dtblTable.Rows[i][j].ToString(), fntColumnData));
-                    table.AddCell(cell);
-                }
-            }
+            ////Write the table
+            //PdfPTable table = new PdfPTable(dtblTable.Columns.Count - 2);
+            ////Table header
+            //BaseFont btnColumnHeader = BaseFont.CreateFont(BaseFont.TIMES_ROMAN, BaseFont.CP1252, BaseFont.NOT_EMBEDDED);
+            //Font fntColumnHeader = new Font(btnColumnHeader, 9, 1, Color.WHITE);
+            //for (int i = 0; i < dtblTable.Columns.Count - 2; i++)
+            //{
+            //    PdfPCell cell = new PdfPCell();
+            //    cell.BackgroundColor = Color.GRAY;
+            //    cell.AddElement(new Chunk(dtblTable.Columns[i].ColumnName.ToUpper(), fntColumnHeader));
+            //    table.AddCell(cell);
+            //}
+            ////table Data
+            //Font fntColumnData = new Font(btnColumnHeader, 8, 1, Color.BLACK);
+            //for (int i = 0; i < dtblTable.Rows.Count; i++)
+            //{
+            //    for (int j = 0; j < dtblTable.Columns.Count - 2; j++)
+            //    {
+            //        PdfPCell cell = new PdfPCell();
+            //        cell.AddElement(new Chunk(dtblTable.Rows[i][j].ToString(), fntColumnData));
+            //        table.AddCell(cell);
+            //    }
+            //}
 
-            document.Add(table);
-            document.Close();
-            writer.Close();
-            fs.Close();
+            //document.Add(table);
+            //document.Close();
+            //writer.Close();
+            //fs.Close();
         }
 
+    }
+    public class InvoiceDto
+    {
+        public string OrderNo { get; set; }
+        public int Quatity { get; set; }
+        public DateTime OrderDate { get; set; }
+        public string Status { get; set; }
+        public string Name { get; set; }
+        public int Price { get; set; }
+        public int TotalPrice { get; set; }
     }
 }

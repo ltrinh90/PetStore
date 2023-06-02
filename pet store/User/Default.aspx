@@ -158,10 +158,11 @@
         </div>
     </div>
 </div>
-<!-- map -->
+<%--<!-- map -->
 <div class="google-map mt-5 ">
-  <%--  <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3919.4635085474065!2d106.66529475080205!3d10.775767862113694!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x31752f9023a3a85d%3A0xdee5c99a7b02feab!2sHuflit!5e0!3m2!1svi!2s!4v1640006787383!5m2!1svi!2s" width="100%" height="450" style="border:0;" allowfullscreen="" loading="lazy"></iframe></div>
-<!--// map-->--%>
+ <iframe src="https://www.google.com/maps/embed?pb=!1m14!1m8!1m3!1d15674.03151705134!2d106.6721476!3d10.8489226!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x317529783f5f813b%3A0xefdfb30c5c23f74c!2zNzMwIGzDqiDEkeG7qWMgdGjhu40!5e0!3m2!1svi!2s!4v1685701763040!5m2!1svi!2s" width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+</div>
+<!-- //contact -->--%>
 
-<!-- //contact -->
+
 </asp:Content>
