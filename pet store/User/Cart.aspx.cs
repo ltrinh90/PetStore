@@ -13,6 +13,7 @@ namespace pet_store.User
 {
     public partial class Cart : System.Web.UI.Page
     {
+        private readonly CartService _service = new CartService();
 
         SqlConnection con;
         SqlCommand cmd;
@@ -55,7 +56,7 @@ namespace pet_store.User
         }
         protected void rCartItem_ItemCommand(object source, RepeaterCommandEventArgs e)
         {
-            if (e.CommandName == "remove")
+            if(e.CommandName == "remove")
             {
                 con = new SqlConnection(Connection.GetConnectionString());
                 cmd = new SqlCommand("DELETE FROM Products WHERE ProductID = @ProductID", con);
@@ -67,7 +68,7 @@ namespace pet_store.User
                     cmd.ExecuteNonQuery();
                     getCartItems();
                     // Cart count
-                    Session["cartCount"] = cartService.Count(Convert.ToInt32(Session["userId"]));
+                    Session["cartCount"] = _service.Count(Convert.ToInt32(Session["userId"]));
                 }
                 catch (Exception ex)
                 {
@@ -112,7 +113,7 @@ namespace pet_store.User
                         if (isTrue)
                         {
                             // Update cart item's  quantity in DB.
-                            cartService.UpdateQuantity(updatedQuantity, ProductId, Convert.ToInt32(Session["userId"]));
+                            isCartUpdated = _service.UpdateQuantity(updatedQuantity, ProductId, Convert.ToInt32(Session["userId"]));
                         }
                     }
                 }
@@ -129,22 +130,31 @@ namespace pet_store.User
                         HiddenField _productId = rCartItem.Items[item].FindControl("hdnProductId") as HiddenField;
                         HiddenField _cartQuantity = rCartItem.Items[item].FindControl("hdnQuantity") as HiddenField;
                         HiddenField _productQuantity = rCartItem.Items[item].FindControl("hdnPrdQuantity") as HiddenField;
-                        Label productNameLabel = rCartItem.Items[item].FindControl("lblName") as Label;
-                        pName = productNameLabel.Text ?? string.Empty;
-                        //int productId = Convert.ToInt32(r.Value);
+                        Label productName = rCartItem.Items[item].FindControl("lblName") as Label;
+                        int productId = Convert.ToInt32(_productId.Value);
 
                         int cartQuantity = Convert.ToInt32(_cartQuantity.Value);
+                        // int cartQuantity;
+                        // if (int.TryParse(_cartQuantity.Value, out cartQuantity))
+                        // {
+                        //    // Chuyển đổi thành công, sử dụng giá trị của cartQuantity ở đây
+                        //    Console.WriteLine("Giá trị của cartQuantity là: " + cartQuantity);
+                        // }
+                        // else
+                        //{
+                        //     // Xử lý lỗi khi chuỗi không hợp lệ
+                        //  Console.WriteLine("Lỗi");
+                        // }
 
                         int productQuantity = Convert.ToInt32(_productQuantity.Value);
                         if (cartQuantity > productQuantity)
                         {
                             lblMsg.Visible = true;
-                            lblMsg.Text = "Item <b>" + pName + "</b> is out of stock :(";
+                            lblMsg.Text = "Item <b>'" + pName + "' is out of stock:(";
                             lblMsg.CssClass = "alert alert-warning";
                         }
                         else
                         {
-                            pName = productNameLabel.Text.ToString();
                             Response.Redirect("Payment.aspx");
                             return;
                         }

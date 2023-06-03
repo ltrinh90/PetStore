@@ -11,6 +11,8 @@ namespace pet_store.User
 {
     public partial class Dog : System.Web.UI.Page
     {
+        private readonly CartService _cartService = new CartService();
+
         SqlConnection con;
         SqlCommand cmd;
         SqlDataAdapter sda;
@@ -93,7 +95,7 @@ namespace pet_store.User
                 else
                 {
                     //Add exitsting
-                    cartService.UpdateQuantity(i + 1, Convert.ToInt32(e.CommandArgument),
+                    _cartService.UpdateQuantity(i + 1, Convert.ToInt32(e.CommandArgument),
                         Convert.ToInt32(Session["userId"]));
                 }
                 lblMsg.Visible = true;

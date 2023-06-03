@@ -1,8 +1,14 @@
-﻿using System;
-
+﻿using Org.BouncyCastle.Utilities.Collections;
+using pet_store.Admin;
+using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
+using System.Linq;
 using System.Text;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
 
 namespace pet_store.User
 {
@@ -79,55 +85,43 @@ namespace pet_store.User
             con.Open();
             #region Sql Transaction
             transaction = con.BeginTransaction();
-            var queryStringBuilder = new StringBuilder();
+            var sql = new StringBuilder();
+            sql.Append("insert into payment(name, cardno, expirydate, cvvno, address, paymentmode)  ");
+            sql.Append("values (@name, @cardno, @expirydate, @cvv, @address, @paymentmethod)        ");
+            cmd = new SqlCommand()
+            {
+                CommandText = sql.ToString(),
+                Transaction = transaction,
+                Connection = con
+            };
 
-            //INSERT INTO dbo.Payment(Name, CardNo, ExpiryDate,CvvNo,Address,PaymentMethod)
-            //VALUES(@Name, @CardNo, @ExpiryDate, @Cvv, @Address, @PaymentMethod)
-            queryStringBuilder.Append("INSERT INTO                      ");
-            queryStringBuilder.Append("     Payment (                   ");
-            queryStringBuilder.Append("         Name                    ");
-            queryStringBuilder.Append("         , CardNo                ");
-            queryStringBuilder.Append("         , ExpiryDate            ");
-            queryStringBuilder.Append("         , CvvNo                 ");
-            queryStringBuilder.Append("         , Address               ");
-            queryStringBuilder.Append("         , PaymentMethod         ");
-            queryStringBuilder.Append("     )                           ");
-            queryStringBuilder.Append("VALUES                           ");
-            queryStringBuilder.Append("     (                           ");
-            queryStringBuilder.Append("         @Name                   ");
-            queryStringBuilder.Append("         , @CardNo               ");
-            queryStringBuilder.Append("         , @ExpiryDate           ");
-            queryStringBuilder.Append("         , @Cvv                  ");
-            queryStringBuilder.Append("         , @Address              ");
-            queryStringBuilder.Append("         , @PaymentMethod        ");
-            queryStringBuilder.Append("     )                           ");
-
-            cmd = new SqlCommand(queryStringBuilder.ToString(), con, transaction);
-            cmd.Parameters.AddWithValue("@Name", name);
-            cmd.Parameters.AddWithValue("@CardNo", cardNo);
-            cmd.Parameters.AddWithValue("@ExpiryDate", expiryDate);
-            cmd.Parameters.AddWithValue("@Cvv", cvv);
-            cmd.Parameters.AddWithValue("@Address", address);
-            cmd.Parameters.AddWithValue("@PaymentMethod", paymentMethod);
-            //cmd.Parameters.Add("@InsertedId", SqlDbType.Int);
-            //cmd.Parameters["InsertedId"].Direction = ParameterDirection.Output;
+            cmd.Parameters.AddWithValue("@name", name);
+            cmd.Parameters.AddWithValue("@cardNo", cardNo);
+            cmd.Parameters.AddWithValue("@expirydate", expiryDate);
+            cmd.Parameters.AddWithValue("@cvv", cvv);
+            cmd.Parameters.AddWithValue("@address", address);
+            cmd.Parameters.AddWithValue("@paymentmethod", paymentMethod);
             try
             {
                 cmd.ExecuteNonQuery();
 
-                //paymentId = Convert.ToInt32(cmd.Parameters["@InsertedId"].Value);
-                var sqlDataAdapter = new SqlDataAdapter(new SqlCommand("SELECT MAX(PaymentID) AS PaymentID FROM Payment", con, transaction));
+                var _sqlDataAdapter = new SqlDataAdapter
+                {
+                    SelectCommand = new SqlCommand("select max(p.paymentid) as PaymentID from payment as p", con, transaction)
+                };
                 var ds = new DataSet();
-                sqlDataAdapter.Fill(ds);
+                _sqlDataAdapter.Fill(ds);
+
                 paymentId = (int)ds.Tables[0].Rows[0]["PaymentID"];
 
-                //paymentId = int.Parse((string)ds.Tables[0].Rows[0]["PaymentID"]);
-
                 #region Getting Cart Item's
-                cmd = new SqlCommand("Cart_Crud", con, transaction);
-                cmd.Parameters.AddWithValue("@Action", "SELECT");
-                cmd.Parameters.AddWithValue("@UserId", Session["userId"]);
-                cmd.CommandType = CommandType.StoredProcedure;
+
+                var _sql = new StringBuilder();
+                _sql.Append("select c.productid, p.name, p.imageurl, p.price, c.quantity        ");
+                _sql.Append("from carts as c join products as p on p.productid = c.productid    ");
+                _sql.Append("where c.userid = @userid                                           ");
+                cmd = new SqlCommand(_sql.ToString(), con, transaction);
+                cmd.Parameters.AddWithValue("@userid", Session["userId"]);
                 dr = cmd.ExecuteReader();
                 while (dr.Read())
                 {
@@ -157,7 +151,6 @@ namespace pet_store.User
                 lblMsg.Visible = true;
                 lblMsg.Text = "Your item orderes successful!!!";
                 lblMsg.CssClass = "alert alert-success";
-                transaction.Commit();
                 Response.AddHeader("REFRESH", "1;URL=Invoice.aspx?id=" + paymentId);
             }
             catch (Exception e)
@@ -165,7 +158,7 @@ namespace pet_store.User
                 transaction.Rollback();
                 Response.Write("<script><alert('" + e.Message + "');</script>");
             }
-            #endregion Sql Transaction 
+            #endregion Sql Transaction
             finally
             {
                 con.Close();
@@ -222,6 +215,16 @@ namespace pet_store.User
                 Response.Write("<script>alert('" + exe.Message + "');</script>");
             }
         }
+    }
 
+    public class OrderDto
+    {
+        public string OrderNo { get; set; }
+        public string ProductId { get; set; }
+        public string Quatity { get; set; }
+        public string UserId { get; set; }
+        public string Status { get; set; }
+        public string PaymentId { get; set; }
+        public string OrderDate { get; set; }
     }
 }

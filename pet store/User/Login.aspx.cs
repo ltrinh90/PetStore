@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
+using System.Text;
 using System.Web;
 using System.Web.UI;
 using System.Web.UI.WebControls;
@@ -36,16 +37,24 @@ namespace pet_store.User
             else
             {
                 con = new SqlConnection(Connection.GetConnectionString());
-                cmd = new SqlCommand("User_Crud", con);
-                cmd.Parameters.AddWithValue("@Action", "SELECT4LOGIN");
+                var sql = new StringBuilder();
+
+                sql.Append("select                          ");
+                sql.Append("    *                           ");
+                sql.Append("from                            ");
+                sql.Append("    users as u                  ");
+                sql.Append("where                           ");
+                sql.Append("    u.username = @Username      ");
+                sql.Append("    and u.password = @Password  ");
+                cmd = new SqlCommand(sql.ToString(), con);
                 cmd.Parameters.AddWithValue("@Username", txtUsername.Text.Trim());
                 cmd.Parameters.AddWithValue("@Password", txtPassword.Text.Trim());
-                cmd.CommandType = CommandType.StoredProcedure;
+
                 sda = new SqlDataAdapter(cmd);
                 dt = new DataTable();
                 sda.Fill(dt);
 
-                if(dt.Rows.Count == 1)
+                if(dt.Rows.Count > 0)
                 {
                     Session["username"] = txtUsername.Text.Trim();
                     Session["userId"] = dt.Rows[0]["userId"];
