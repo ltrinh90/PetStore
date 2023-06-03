@@ -11,7 +11,8 @@ namespace pet_store.User
     {
         private readonly CartService _cartService = new CartService();
 
-        SqlConnection con;
+        private SqlConnection con = new SqlConnection(Connection.GetConnectionString());
+
         SqlCommand cmd;
         SqlDataAdapter sda;
         DataTable dt;
@@ -65,24 +66,31 @@ namespace pet_store.User
         {
             if (Session["userId"] != null)
             {
-                int i = isItemExistInCart(Convert.ToInt32(e.CommandArgument));
+                int i = CheckExisted(Convert.ToInt32(e.CommandArgument));
                 if (i == 0)
                 {
-                    // Adding new item in cart
-                    con = new SqlConnection(Connection.GetConnectionString());
-                    cmd = new SqlCommand("Cart_Crud", con);
-                    cmd.Parameters.AddWithValue("@Action", "INSERT");
+                    con.Open();
+                    var tx = con.BeginTransaction();
+                    var sql = new StringBuilder();
+
+                    sql.Append("insert                                      ");
+                    sql.Append("into Carts(ProductId, Quantity, UserId)     ");
+                    sql.Append("values (@ProductId, @Quantity, @UserId)     ");
+
+                    cmd = new SqlCommand(sql.ToString(), con, tx);
+
                     cmd.Parameters.AddWithValue("@ProductId", e.CommandArgument);
                     cmd.Parameters.AddWithValue("@Quantity", 1);
                     cmd.Parameters.AddWithValue("@UserId", Session["userId"]);
-                    cmd.CommandType = CommandType.StoredProcedure;
+
                     try
                     {
-                        con.Open();
                         cmd.ExecuteNonQuery();
+                        tx.Commit();
                     }
                     catch (Exception ex)
                     {
+                        tx.Rollback();
                         Response.Write("<script>alert('Error - " + ex.Message + " ');</script>");
                     }
                     finally
@@ -106,28 +114,42 @@ namespace pet_store.User
                 Response.Redirect("Login.aspx");
             }
         }
-        int isItemExistInCart(int productId)
+        int CheckExisted(int productId)
         {
+            var sql = new StringBuilder();
+            var _dt = new DataTable();
             con = new SqlConnection(Connection.GetConnectionString());
-            cmd = new SqlCommand("Cart_Crud", con);
-            cmd.Parameters.AddWithValue("@Action", "GETBYID");
+
+            sql.Append("select                          ");
+            sql.Append("    c.*                         ");
+            sql.Append("from                            ");
+            sql.Append("    Carts as c                  ");
+            sql.Append("where                           ");
+            sql.Append("    c.productid = @ProductId    ");
+            sql.Append("    and c.userid = @UserId      ");
+
+            cmd = new SqlCommand(sql.ToString(), con);
+
             cmd.Parameters.AddWithValue("@ProductId", productId);
             cmd.Parameters.AddWithValue("@UserId", Session["userId"]);
-            cmd.CommandType = CommandType.StoredProcedure;
-            sda = new SqlDataAdapter(cmd);
-            dt = new DataTable();
-            sda.Fill(dt);
-            int quantity = 0;
-            if (dt.Rows.Count > 0)
-            {
-                quantity = Convert.ToInt32(dt.Rows[0]["Quantity"]);
 
+            sda = new SqlDataAdapter(cmd);
+            sda.Fill(_dt);
+
+            if (_dt.Rows.Count > 0 && _dt.Rows[0]["Quantity"] is DBNull)
+            {
+                if (_dt.Rows[0]["Quantity"] is DBNull)
+                {
+                    return 0;
+                }
+
+                return Convert.ToInt32(_dt.Rows[0]["Quantity"]);
             }
-            return quantity;
+            else
+            {
+                return 0;
+            }
+
         }
-        //public string  LowerCase(object obj)
-        //{
-        //    return obj.ToString().ToLower();
-        //}
     }
 }
