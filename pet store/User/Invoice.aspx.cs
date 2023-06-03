@@ -1,17 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using iTextSharp.text;
+using System;
 using System.Data;
 using System.Data.SqlClient;
-using System.Linq;
-using System.Web;
-using System.Web.UI;
-using System.Web.UI.WebControls;
-using System.Xml.Linq;
-using System.Drawing.Printing;
-
-using iTextSharp.text.pdf;
-using iTextSharp.text;
-using System.IO;
 using System.Net;
 using System.Text;
 
@@ -42,9 +32,8 @@ namespace pet_store.User
                 }
             }
         }
-        List<InvoiceDto> GetOrderDetails()
+        DataTable GetOrderDetails()
         {
-            double grandTotal = 0;
             con = new SqlConnection(Connection.GetConnectionString());
             var sql = new StringBuilder();
 
@@ -66,22 +55,24 @@ namespace pet_store.User
             sql.Append("    and o.UserId = @UserId								");
 
             cmd = new SqlCommand(sql.ToString(), con);
+            
             cmd.Parameters.AddWithValue("@Action", "INVOICBYID");
             cmd.Parameters.AddWithValue("@PaymentId", Convert.ToInt32(Request.QueryString["id"]));
             cmd.Parameters.AddWithValue("@UserId", Session["userId"]);
-            sda = new SqlDataAdapter(cmd);
+            
             dt = new DataTable();
+            
+            sda = new SqlDataAdapter(cmd);
             sda.Fill(dt);
-            if (dt.Rows.Count > 0)
+
+            decimal grandTotal = 0;
+
+            foreach (DataRow drow in dt.Rows)
             {
-                foreach (DataRow drow in dt.Rows)
-                {
-                    grandTotal += Convert.ToDouble(drow["TotalPrice"]);
-                }
+                grandTotal += Convert.ToDecimal(drow["TotalPrice"]);
             }
-            DataRow dr = dt.NewRow();
-            dr["TotalPrice"] = grandTotal;
-            dt.Rows.Add(dr);
+
+            Label_TotalPrice.Text = $"Total Price: {grandTotal}$";
             return dt;
         }
 
@@ -89,12 +80,12 @@ namespace pet_store.User
         {
             try
             {
-                string downloadPath = @"D:\abc\order_invoice.pdf";
+                String fileName = $"invoice_${DateTime.Now:yyyyMMddhhmmss}";
                 DataTable dtbl = GetOrderDetails();
-                Utils.ExportToPdf(dtbl, downloadPath, "Order Invoice");
+                Utils.ExportToPdf(dtbl, fileName, "Order Invoice");
 
                 WebClient client = new WebClient();
-                Byte[] buffer = client.DownloadData(downloadPath);
+                byte[] buffer = client.DownloadData($"{Constants.DOWNLOAD_FOLDER}\\{fileName}");
                 if (buffer != null)
                 {
                     Response.ContentType = "application/pdf";

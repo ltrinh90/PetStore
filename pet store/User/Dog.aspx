@@ -1,6 +1,6 @@
 ﻿<%@ Page Title="" Language="C#" MasterPageFile="~/User/User.Master" AutoEventWireup="true" CodeBehind="Dog.aspx.cs" Inherits="pet_store.User.Dog" %>
 
-<%@ Import Namespace="pet_store.Util" %>
+<%@ Import Namespace="pet_store" %>
 
 <asp:Content ID="Content1" ContentPlaceHolderID="head" runat="server">
 </asp:Content>
@@ -107,7 +107,7 @@
           </div>
                 </ItemTemplate>
             </asp:Repeater>
-           
+
 
         </div>
       </div>

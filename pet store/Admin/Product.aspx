@@ -1,6 +1,6 @@
 ﻿<%@ Page Title="" Language="C#" MasterPageFile="~/Admin/Admin.Master" AutoEventWireup="true" CodeBehind="Product.aspx.cs" Inherits="pet_store.Admin.Product" %>
 
-<%@ Import Namespace ="pet_store.Util" %>
+<%@ Import Namespace ="pet_store" %>
 <asp:Content ID="Content1" ContentPlaceHolderID="head" runat="server">
 
 
@@ -71,7 +71,7 @@
                                                 <asp:RequiredFieldValidator ID="RequiredFieldValidator2" runat="server"
                                                     ErrorMessage="Description is required" ForeColor="Red" Display="Dynamic"
                                                     SetFocusOnError="true" ControlToValidate="txtDescription">
-                                                </asp:RequiredFieldValidator>    
+                                                </asp:RequiredFieldValidator>
                                             </div>
                                         </div>
 
@@ -119,7 +119,7 @@
                                              <div class="form-control">
                                             <label>Product Category</label>
                                             <div>
-                                                <asp:DropDownList ID="ddlCategories" runat="server" CssClass="form-control" 
+                                                <asp:DropDownList ID="ddlCategories" runat="server" CssClass="form-control"
                                                     DataSourceID="SqlDataSource1" DataTextField="Name" DataValueField="CategoryId"
                                                     AppendDataBoundItems ="true">
                                                     <asp:ListItem Value="0"> Select Category</asp:ListItem>
@@ -128,9 +128,9 @@
                                                 <asp:RequiredFieldValidator ID="RequiredFieldValidator5" runat="server"
                                                     ErrorMessage="Category is required" ForeColor="Red" Display="Dynamic"
                                                     SetFocusOnError="true" ControlToValidate="ddlCategories" InitialValue="0">
-                                                </asp:RequiredFieldValidator> 
+                                                </asp:RequiredFieldValidator>
 
-                                               <asp:SqlDataSource ID="SqlDataSource1" runat="server" 
+                                               <asp:SqlDataSource ID="SqlDataSource1" runat="server"
                                                    ConnectionString="<%$ ConnectionStrings:cs %>" SelectCommand="SELECT [CategoryId], [Name] FROM [Categories]" >
                                                 </asp:SqlDataSource>
                                             </div>
@@ -144,7 +144,7 @@
                                         <div class="pb-5">
                                             <asp:Button  ID="btnAddOrUpdate" runat="server" Text="Add" CssClass="btn btn-primary"
                                                 OnClick="btnAddOrUpdate_Click"/>
-                                          
+
                                             &nbsp;
                                             <asp:Button ID="btnClear" runat="server" Text="Clear" CssClass="btn btn-primary"
                                                 CauseValidation="false" OnClick="btnClear_Click" />
@@ -168,7 +168,7 @@
                                                          <table class="table data-table-export table-hover nowrap">
                                                              <thead>
 
-                                                            
+
                                                              <tr>
                                                                  <th class="table-plus">Name</th>
                                                                  <th>Image</th>
@@ -201,12 +201,12 @@
                                                                  <asp:Label ID="lblIsActive" runat="server" Text='<%# Eval("IsActive") %>'></asp:Label>
                                                                 </td>
 
-                                                             
+
                                                               <td><%# Eval("Description") %> </td>
 
                                                               <td><%# Eval("CreatedDate") %> </td>
                                                               <td>
-                                                               <asp:LinkButton ID="lnkEdit" Text="Edit" runat="server" CssClass="badge badge-primary" 
+                                                               <asp:LinkButton ID="lnkEdit" Text="Edit" runat="server" CssClass="badge badge-primary"
                                                                    CausesValidation="false"
                                                                    CommandArgument='<%# Eval("ProductId") %>' CommandName="edit">
                                                                    <i class="ti-pencil"></i>

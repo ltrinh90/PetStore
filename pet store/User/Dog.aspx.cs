@@ -1,6 +1,4 @@
-﻿using pet_store.Service.Implement;
-using pet_store.Service.Interface;
-using System;
+﻿using System;
 
 using System.Data;
 using System.Data.SqlClient;

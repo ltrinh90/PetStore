@@ -1,14 +1,7 @@
-﻿using Org.BouncyCastle.Utilities.Collections;
-using pet_store.Admin;
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.Data;
 using System.Data.SqlClient;
-using System.Linq;
 using System.Text;
-using System.Web;
-using System.Web.UI;
-using System.Web.UI.WebControls;
 
 namespace pet_store.User
 {
@@ -16,7 +9,6 @@ namespace pet_store.User
     {
         SqlConnection con;
         SqlCommand cmd;
-        SqlDataReader dr, dr1;
         DataTable dt;
         SqlTransaction transaction = null;
         string _name = string.Empty;
@@ -83,7 +75,7 @@ namespace pet_store.User
             });
             con = new SqlConnection(Connection.GetConnectionString());
             con.Open();
-            #region Sql Transaction
+
             transaction = con.BeginTransaction();
             var sql = new StringBuilder();
             sql.Append("insert into payment(name, cardno, expirydate, cvvno, address, paymentmode)  ");
@@ -114,31 +106,35 @@ namespace pet_store.User
 
                 paymentId = (int)ds.Tables[0].Rows[0]["PaymentID"];
 
-                #region Getting Cart Item's
-
                 var _sql = new StringBuilder();
                 _sql.Append("select c.productid, p.name, p.imageurl, p.price, c.quantity        ");
                 _sql.Append("from carts as c join products as p on p.productid = c.productid    ");
                 _sql.Append("where c.userid = @userid                                           ");
                 cmd = new SqlCommand(_sql.ToString(), con, transaction);
                 cmd.Parameters.AddWithValue("@userid", Session["userId"]);
-                dr = cmd.ExecuteReader();
-                while (dr.Read())
+                var _ds = new DataSet();
+                var sqlDataAdapter = new SqlDataAdapter(cmd);
+                
+                sqlDataAdapter.Fill(_ds);
+
+                for (var i = 0; i < _ds.Tables[0].Rows.Count; i++)
                 {
+                    var dr = _ds.Tables[0].Rows[i];
+
                     productId = (int)dr["ProductId"];
                     quantity = (int)dr["Quantity"];
+
                     // Update Product Quantity
                     UpdateQuantity(productId, quantity, transaction, con);
+                    
                     // Delete Cart Item
                     DeleteCartItem(productId, transaction, con);
-                    // Delete Cart Item End
-                    dt.Rows.Add(Util.Utils.GetUniqueId(), productId, quantity, (int)Session["userId"], "Pending",
+
+                    dt.Rows.Add(Utils.GetUniqueId(), productId, quantity, (int)Session["userId"], "Pending",
                         paymentId, Convert.ToDateTime(DateTime.Now));
                 }
-                dr.Close();
-                #endregion Getting Cart Item's
 
-                #region Order Details
+                // Save order details
                 if (dt.Rows.Count > 0)
                 {
                     cmd = new SqlCommand("Save_Orders", con, transaction);
@@ -146,8 +142,8 @@ namespace pet_store.User
                     cmd.CommandType = CommandType.StoredProcedure;
                     cmd.ExecuteNonQuery();
                 }
-                #endregion Order Details
 
+                transaction.Commit();
                 lblMsg.Visible = true;
                 lblMsg.Text = "Your item orderes successful!!!";
                 lblMsg.CssClass = "alert alert-success";
@@ -158,7 +154,6 @@ namespace pet_store.User
                 transaction.Rollback();
                 Response.Write("<script><alert('" + e.Message + "');</script>");
             }
-            #endregion Sql Transaction
             finally
             {
                 con.Close();
@@ -171,11 +166,15 @@ namespace pet_store.User
             cmd.Parameters.AddWithValue("@Action", "GETBYID");
             cmd.Parameters.AddWithValue("@ProductId", _productId);
             cmd.CommandType = CommandType.StoredProcedure;
+            var sqlDataAdapter = new SqlDataAdapter(cmd);
+            var ds = new DataSet();
+            sqlDataAdapter.Fill(ds);
             try
             {
-                dr1 = cmd.ExecuteReader();
-                while (dr1.Read())
+                for (int i = 0; i < ds.Tables[0].Rows.Count; i ++)
                 {
+                    var dr1 = ds.Tables[0].Rows[i];
+
                     dbQuantity = (int)dr1["Quantity"];
                     if (dbQuantity > _quantity && dbQuantity > 2)
                     {
@@ -188,7 +187,7 @@ namespace pet_store.User
                         cmd.ExecuteNonQuery();
                     }
                 }
-                dr1.Close();
+          
             }
             catch (Exception exe)
             {
@@ -215,16 +214,5 @@ namespace pet_store.User
                 Response.Write("<script>alert('" + exe.Message + "');</script>");
             }
         }
-    }
-
-    public class OrderDto
-    {
-        public string OrderNo { get; set; }
-        public string ProductId { get; set; }
-        public string Quatity { get; set; }
-        public string UserId { get; set; }
-        public string Status { get; set; }
-        public string PaymentId { get; set; }
-        public string OrderDate { get; set; }
     }
 }

@@ -2,7 +2,7 @@
 
 using System.Data;
 using System.Data.SqlClient;
-
+using System.Text;
 using System.Web.UI;
 using System.Web.UI.WebControls;
 
@@ -25,7 +25,7 @@ namespace pet_store.User
                 else
                 {
                     getUserDetails();
-                    getPurchaseHistory();
+                    getOrderHistory();
                 }
             }
         }
@@ -43,43 +43,61 @@ namespace pet_store.User
             rUserProfile.DataBind();
             if (dt.Rows.Count == 1)
             {
-                Session["name"]  = dt.Rows[0]["Name"].ToString();
+                Session["name"] = dt.Rows[0]["Name"].ToString();
                 Session["email"] = dt.Rows[0]["Email"].ToString();
                 Session["imageUrl"] = dt.Rows[0]["ImageUrl"].ToString();
-                Session["createDate"] = dt.Rows[0]["CreatedDate"].ToString();
+                Session["createDate"] = dt.Rows[0]["CreateDate"].ToString();
 
             }
         }
-        void getPurchaseHistory()
+        void getOrderHistory()
         {
-            int sr = 1;
             con = new SqlConnection(Connection.GetConnectionString());
-            cmd = new SqlCommand("Invoice", con);
-            cmd.Parameters.AddWithValue("@Action", "ODRHISTORY");
+            var sql = new StringBuilder();
+
+            sql.Append("select													                ");
+            sql.Append("    o.OrderNo											                ");
+            sql.Append("    , o.Status 											                ");
+            sql.Append("    , o.OrderDate										                ");
+            sql.Append("    , o.PaymentId							                            ");
+            sql.Append("    , o.Quatity								                            ");
+            sql.Append("    , product.Name											            ");
+            sql.Append("    , product.Price											            ");
+            sql.Append("    , (product.Price * o.Quatity) as TotalPrice				            ");
+            sql.Append("    , payment.PaymentMode as PaymentMethod	                            ");
+            sql.Append("    , payment.CardNo 							                        ");
+            sql.Append("from 									                                ");
+            sql.Append("    Orders as o join Payment as payment					                ");
+            sql.Append("        on payment.PaymentId = o.PaymentId join Products as product	    ");
+            sql.Append("        on product.ProductId = o.ProductId                              ");
+            sql.Append("where									                                ");
+            sql.Append("    o.UserId = @UserId					                                ");
+
+            cmd = new SqlCommand(sql.ToString(), con);
+
             cmd.Parameters.AddWithValue("@UserId", Session["userId"]);
-            cmd.CommandType = CommandType.StoredProcedure;
             sda = new SqlDataAdapter(cmd);
-            dt = new DataTable();
-            sda.Fill(dt);
-            dt.Columns.Add("SrNo", typeof(Int32));
-            if (dt.Rows.Count > 0)
+            var ds = new DataSet();
+            sda.Fill(ds);
+
+            ds.Tables[0].Columns.Add("SrNo", typeof(int));
+
+            if (ds.Tables[0].Rows.Count > 0)
             {
-                foreach (DataRow dataRow in dt.Rows)
+                for (int i = 0; i < ds.Tables[0].Rows.Count; i++)
                 {
-                    dataRow["SrNo"] = sr;
-                    sr++;
+                    ds.Tables[0].Rows[i]["SrNo"] = i;
                 }
             }
-            rPurchaseHistory.DataSource = dt;
-            if (dt.Rows.Count == 0)
+            else
             {
-                rPurchaseHistory.FooterTemplate = null;
                 rPurchaseHistory.FooterTemplate = new CustomTemplate(ListItemType.Footer);
-
             }
-            rPurchaseHistory.DataSource = dt;
+
+            rPurchaseHistory.DataSource = ds;
             rPurchaseHistory.DataBind();
         }
+
         private sealed class CustomTemplate : ITemplate
         {
             private ListItemType ListItemType { get; set; }
@@ -96,38 +114,5 @@ namespace pet_store.User
                 }
             }
         }
-
-        protected void rPurchaseHistory_ItemDataBound(object sender, RepeaterItemEventArgs e)
-        {
-            if (e.Item.ItemType == ListItemType.Item || e.Item.ItemType == ListItemType.AlternatingItem)
-            {
-             double grandTotal = 0;
-            HiddenField paymentId = e.Item.FindControl("hdnPaymentId") as HiddenField;
-            Repeater repOrders = e.Item.FindControl("rOrders") as Repeater;
-
-            con = new SqlConnection(Connection.GetConnectionString());
-            cmd = new SqlCommand("Invoice", con);
-            cmd.Parameters.AddWithValue("@Action", "INVOICBYID");
-            cmd.Parameters.AddWithValue("@PaymentId", Convert.ToInt32(paymentId.Value));
-            cmd.Parameters.AddWithValue("@UserId", Session["userId"]);
-            cmd.CommandType = CommandType.StoredProcedure;
-            sda = new SqlDataAdapter(cmd);
-            dt = new DataTable();
-            sda.Fill(dt);
-            if (dt.Rows.Count > 0)
-            {
-                foreach (DataRow dataRow in dt.Rows)
-                {
-                    grandTotal += Convert.ToDouble(dataRow["TotalPrice"]);
-                }
-            }
-            DataRow dr = dt.NewRow();
-            dr["TotalPrice"] = grandTotal;
-            dt.Rows.Add(dr);
-            rPurchaseHistory.DataSource = dt;
-            rPurchaseHistory.DataBind();
-            }
-        }
     }
-
 }

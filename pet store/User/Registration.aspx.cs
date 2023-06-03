@@ -45,7 +45,7 @@ namespace pet_store.User
             cmd.Parameters.AddWithValue("@Password", txtPassword.Text.Trim());
             if (fuUserImage.HasFile)
             {
-                if (Util.Utils.IsValidExtension(fuUserImage.FileName))
+                if (Utils.IsValidExtension(fuUserImage.FileName))
                 {
                     Guid obj = Guid.NewGuid();
                     fileExtension = Path.GetExtension(fuUserImage.FileName);

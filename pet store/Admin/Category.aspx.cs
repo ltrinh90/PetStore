@@ -44,7 +44,7 @@ namespace pet_store.Admin
             cmd.Parameters.AddWithValue("@IsActive", cbIsActive.Checked);
             if(fuCategoryImage.HasFile)
             {
-                if(Util.Utils.IsValidExtension(fuCategoryImage.FileName))
+                if(Utils.IsValidExtension(fuCategoryImage.FileName))
                 {
                     Guid obj = Guid.NewGuid();
                     fileExtension = Path.GetExtension(fuCategoryImage.FileName);

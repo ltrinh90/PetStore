@@ -283,6 +283,7 @@
     </Compile>
     <Compile Include="CartService.cs" />
     <Compile Include="Connection.cs" />
+    <Compile Include="Constants.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>

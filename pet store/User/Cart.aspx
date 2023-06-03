@@ -1,6 +1,6 @@
 ﻿<%@ Page Title="" Language="C#" MasterPageFile="~/User/User.Master" AutoEventWireup="true" CodeBehind="Cart.aspx.cs" Inherits="pet_store.User.Cart" %>
 
-<%@ Import Namespace="pet_store.Util" %>
+<%@ Import Namespace="pet_store" %>
 <asp:Content ID="Content1" ContentPlaceHolderID="head" runat="server">
 </asp:Content>
 <asp:Content ID="Content2" ContentPlaceHolderID="ContentPlaceHolder1" runat="server">
@@ -42,8 +42,7 @@
                         <td>
                             <asp:Label ID="lblPrice" runat="server" Text='<%# Eval("Price") %>'> $</asp:Label>
                  <%--          <asp:Label ID="Label1" runat="server" Text='<%# Eval("Price") %>'> $</asp:Label>--%>
-                            <asp:HiddenField ID="hdnProductId" runat="server" Value='<%# Eval("ProductId") %>' />                            
-                            <asp:HiddenField ID="hdnQuantity" runat="server" Value='<%# Eval("Qty") %>' />
+                            <asp:HiddenField ID="hdnProductId" runat="server" Value='<%# Eval("ProductId") %>' />
                             <asp:HiddenField ID="hdnPrdQuantity" runat="server" Value='<%# Eval("PrdQty") %>' />
                         </td>
                         <td>

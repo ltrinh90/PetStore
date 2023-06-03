@@ -1,11 +1,5 @@
-﻿using pet_store.Service.Implement;
-using pet_store.Service.Interface;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Web;
+﻿using System;
 using System.Web.UI;
-using System.Web.UI.WebControls;
 
 namespace pet_store.User
 {

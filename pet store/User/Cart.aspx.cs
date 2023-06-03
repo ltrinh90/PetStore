@@ -1,11 +1,7 @@
-﻿using pet_store.Service.Implement;
-using pet_store.Service.Interface;
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.Data;
 using System.Data.SqlClient;
-using System.Linq;
-using System.Web;
+using System.Text;
 using System.Web.UI;
 using System.Web.UI.WebControls;
 
@@ -38,19 +34,37 @@ namespace pet_store.User
 
         void getCartItems()
         {
-            con = new SqlConnection(Connection.GetConnectionString());
-            cmd = new SqlCommand("Cart_Crud", con);
-            cmd.Parameters.AddWithValue("@Action", "SELECT");
-            cmd.Parameters.AddWithValue("@UserId", Session["userId"]);
-            cmd.CommandType = CommandType.StoredProcedure;
-            sda = new SqlDataAdapter(cmd);
+            var sql = new StringBuilder();
             var ds = new DataSet();
+            con = new SqlConnection(Connection.GetConnectionString());
+
+            sql.Append("select									");
+            sql.Append("    c.ProductId							");
+            sql.Append("    , p.Name							");
+            sql.Append("    , p.ImageUrl						");
+            sql.Append("    , p.Price							");
+            sql.Append("    , c.Quantity						");
+            sql.Append("    , c.Quantity as Qty					");
+            sql.Append("    , p.Quantity as PrdQty 				");
+            sql.Append("from									");
+            sql.Append("    Carts as c 							");
+            sql.Append("    inner join Products as p 			");
+            sql.Append("        on p.ProductId = c.ProductId 	");
+            sql.Append("where									");
+            sql.Append("    c.UserId = @UserId					");
+
+            cmd = new SqlCommand(sql.ToString(), con);
+            cmd.Parameters.AddWithValue("@UserId", Session["userId"]);
+
+            sda = new SqlDataAdapter(cmd);
             sda.Fill(ds);
+            
             if (ds.Tables[0].Rows.Count == 0)
             {
                 //rCartItem.FooterTemplate = null;
                 rCartItem.FooterTemplate = new CustomTemplate(ListItemType.Footer);
             }
+
             rCartItem.DataSource = ds;
             rCartItem.DataBind();
         }
@@ -113,7 +127,7 @@ namespace pet_store.User
                         if (isTrue)
                         {
                             // Update cart item's  quantity in DB.
-                            isCartUpdated = _service.UpdateQuantity(updatedQuantity, ProductId, Convert.ToInt32(Session["userId"]));
+                            _service.UpdateQuantity(updatedQuantity, ProductId, Convert.ToInt32(Session["userId"]));
                         }
                     }
                 }
@@ -128,12 +142,14 @@ namespace pet_store.User
                     if (rCartItem.Items[item].ItemType == ListItemType.Item || rCartItem.Items[item].ItemType == ListItemType.AlternatingItem)
                     {
                         HiddenField _productId = rCartItem.Items[item].FindControl("hdnProductId") as HiddenField;
-                        HiddenField _cartQuantity = rCartItem.Items[item].FindControl("hdnQuantity") as HiddenField;
                         HiddenField _productQuantity = rCartItem.Items[item].FindControl("hdnPrdQuantity") as HiddenField;
                         Label productName = rCartItem.Items[item].FindControl("lblName") as Label;
+
+                        var _cartQuantity = rCartItem.Items[item].FindControl("txtQuantity") as TextBox;
+
                         int productId = Convert.ToInt32(_productId.Value);
 
-                        int cartQuantity = Convert.ToInt32(_cartQuantity.Value);
+                        int cartQuantity = Convert.ToInt32(_cartQuantity.Text);
                         // int cartQuantity;
                         // if (int.TryParse(_cartQuantity.Value, out cartQuantity))
                         // {

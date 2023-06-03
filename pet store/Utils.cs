@@ -46,9 +46,14 @@ namespace pet_store
             return uniqueId;
         }
 
-        public static void ExportToPdf(DataTable dtblTable, String strPdfPath, string strHeader)
+        public static void ExportToPdf(DataTable dtblTable, String fileName, string strHeader)
         {
-            FileStream fs = new FileStream(strPdfPath, FileMode.Create, FileAccess.Write, FileShare.None);
+            if (!Directory.Exists(Constants.DOWNLOAD_FOLDER))
+            {
+                Directory.CreateDirectory(Constants.DOWNLOAD_FOLDER);
+            }
+
+            FileStream fs = new FileStream($"{Constants.DOWNLOAD_FOLDER}\\{fileName}", FileMode.Create, FileAccess.Write, FileShare.None);
             Document document = new Document();
             document.SetPageSize(PageSize.A4);
             PdfWriter writer = PdfWriter.GetInstance(document, fs);
